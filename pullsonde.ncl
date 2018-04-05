@@ -26,7 +26,7 @@ dropfiles = systemfunc("awk '{print $1}' "+listfile)
 ;stormday  = systemfunc("awk '{print $4}' "+listfile)
 ;stormhour = systemfunc("awk '{print $5}' "+listfile)
 ;stormminu = systemfunc("awk '{print $6}' "+listfile)
-;category  = stringtochar(systemfunc("awk '{print $7}' "+listfile))
+stormtype = stringtoint(systemfunc("awk '{print $7}' "+listfile))
 stormlat  = stringtofloat(systemfunc("awk '{print $8}' "+listfile))
 stormlon  = stringtofloat(systemfunc("awk '{print $9}' "+listfile))
 vmax      = stringtoint(systemfunc("awk '{print $10}' "+listfile))
@@ -111,6 +111,7 @@ copy_VarCoords(droptime,droplat)
 copy_VarCoords(droptime,droplon)
 copy_VarCoords(droptime,radius)
 copy_VarCoords(droptime,azimuth)
+copy_VarCoords(droptime,stormtype)
 copy_VarCoords(droptime,stormlat)
 copy_VarCoords(droptime,stormlon)
 copy_VarCoords(droptime,vmax)
@@ -185,6 +186,9 @@ sondelat@_FillValue = -9999
 sondelon@long_name = "sonde longitude"
 sondelon@units = "degrees east"
 sondelon@_FillValue = -9999
+stormtype@long_name = "storm type"
+stormtype@key = "0=Tropical,1=Subtropical,2=Extratropical,3=Disturbance,4=Conflicting Reports,5=Not Reported,6=Missing"
+stormtype@_FillValue = 7
 stormlat@long_name = "latitude of the nearest TC storm center from HURDAT"
 stormlat@units = "degrees north"
 stormlat@_FillValue = -9999
@@ -234,6 +238,7 @@ filevardef(fout,"radius",typeof(radius),getvardims(radius))
 filevardef(fout,"azimuth",typeof(azimuth),getvardims(azimuth))
 filevardef(fout,"stormid",typeof(stormid),getvardims(stormid))
 filevardef(fout,"stormname",typeof(stormname),getvardims(stormname))
+filevardef(fout,"stormtype",typeof(stormtype),getvardims(stormtype))
 filevardef(fout,"stormlat",typeof(stormlat),getvardims(stormlat))
 filevardef(fout,"stormlon",typeof(stormlon),getvardims(stormlon))
 filevardef(fout,"vmax",typeof(vmax),getvardims(vmax))
@@ -258,6 +263,7 @@ filevarattdef(fout,"radius",radius)
 filevarattdef(fout,"azimuth",azimuth)
 filevarattdef(fout,"stormid",stormid)
 filevarattdef(fout,"stormname",stormname)
+filevarattdef(fout,"stormtype",stormtype)
 filevarattdef(fout,"stormlat",stormlat)
 filevarattdef(fout,"stormlon",stormlon)
 filevarattdef(fout,"vmax",vmax)
@@ -286,6 +292,7 @@ fout->v        = (/v/)
 fout->rh       = (/rh/)
 fout->sondelat = (/sondelat/)
 fout->sondelon = (/sondelon/)
+fout->stormtype = (/stormtype/)
 fout->stormlat = (/stormlat/)
 fout->stormlon = (/stormlon/)
 fout->vmax     = (/vmax/)
