@@ -33,6 +33,8 @@ vmax      = stringtoint(systemfunc("awk '{print $10}' "+listfile))
 pmin      = stringtoint(systemfunc("awk '{print $11}' "+listfile))
 radius    = stringtofloat(systemfunc("awk '{print $12}' "+listfile))
 azimuth   = stringtofloat(systemfunc("awk '{print $13}' "+listfile))
+stormid   = stringtochar(systemfunc("awk '{print $14}' "+listfile))
+stormname = stringtochar(systemfunc("awk '{print $15}' "+listfile))
 ndropfiles= dimsizes(dropfiles)
 
 ;----------------------------------------;
@@ -126,6 +128,10 @@ copy_VarCoords(p,v)
 copy_VarCoords(p,rh)
 copy_VarCoords(p,sondelat)
 copy_VarCoords(p,sondelon)
+stormid!0 = "dropfiles"
+stormid!1 = "ncharid"
+stormname!0 = "dropfiles"
+stormname!1 = "ncharnm"
 
 ;Assign attributes to arrays
 droptime@long_name = "time of sonde deployment"
@@ -144,6 +150,8 @@ radius@_FillValue = -9999
 azimuth@long_name = "azimuth (clockwise from north) from the nearest TC storm center from HURDAT"
 azimuth@units = "degrees"
 azimuth@_FillValue = -9999
+stormid@long_name = "IBTrACS storm serial number"
+stormname@long_name = "storm name"
 cpt@long_name = "coldest temperature in sounding"
 cpt@units = "degrees Celsius"
 cpt@_FillValue = -9999
@@ -198,13 +206,13 @@ setfileoption(fout,"DefineMode",True)
 
 ;Define global attributes
 fileatts = True
-fileatts@description = "Contains "+type+" data for all sondes deployed within "+maxrad+"km of tropical cyclones in the Atlantic or Eastern Pacific basins, using sonde lists produced by /jm13/pduran/ncl/sounding-sort.ncl."
+fileatts@description = "Created by /jm13/pduran/ncl/pullsonde.ncl. Contains "+type+" data for all sondes deployed within "+maxrad+"km of tropical cyclones in the Atlantic basin, using sonde lists produced by /jm13/pduran/ncl/sounding-sort.ncl."
 fileattdef(fout,fileatts)
 
 ;Define variable attributes
-dimNames = (/"dropfiles","height"/)
-dimSizes = (/dimsizes(dropfiles),dimsizes(z)/)
-dimUnlim = (/False,False/)
+dimNames = (/"dropfiles","height","ncharid","ncharnm"/)
+dimSizes = (/dimsizes(dropfiles),dimsizes(z),dimsizes(stormid(0,:)),dimsizes(stormname(0,:))/)
+dimUnlim = (/False,False,False,False/)
 filedimdef(fout,dimNames,dimSizes,dimUnlim)
 
 filevardef(fout,"droptime",typeof(droptime),getvardims(droptime))
@@ -224,6 +232,8 @@ filevardef(fout,"sondelat",typeof(sondelat),getvardims(sondelat))
 filevardef(fout,"sondelon",typeof(sondelon),getvardims(sondelon))
 filevardef(fout,"radius",typeof(radius),getvardims(radius))
 filevardef(fout,"azimuth",typeof(azimuth),getvardims(azimuth))
+filevardef(fout,"stormid",typeof(stormid),getvardims(stormid))
+filevardef(fout,"stormname",typeof(stormname),getvardims(stormname))
 filevardef(fout,"stormlat",typeof(stormlat),getvardims(stormlat))
 filevardef(fout,"stormlon",typeof(stormlon),getvardims(stormlon))
 filevardef(fout,"vmax",typeof(vmax),getvardims(vmax))
@@ -246,6 +256,8 @@ filevarattdef(fout,"sondelat",sondelat)
 filevarattdef(fout,"sondelon",sondelon)
 filevarattdef(fout,"radius",radius)
 filevarattdef(fout,"azimuth",azimuth)
+filevarattdef(fout,"stormid",stormid)
+filevarattdef(fout,"stormname",stormname)
 filevarattdef(fout,"stormlat",stormlat)
 filevarattdef(fout,"stormlon",stormlon)
 filevarattdef(fout,"vmax",vmax)
@@ -261,6 +273,8 @@ fout->droplat  = (/droplat/)
 fout->droplon  = (/droplon/)
 fout->radius   = (/radius/)
 fout->azimuth  = (/azimuth/)
+fout->stormid  = (/stormid/)
+fout->stormname= (/stormname/)
 fout->cpt      = (/cpt/)
 fout->cpz      = (/cpz/)
 fout->maxhght  = (/maxhght/)
