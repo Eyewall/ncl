@@ -9,7 +9,7 @@
 ;---------------------------------------------
 
 indir    = "/nfs/jm13/pduran/hurricanesondes/"
-outdir   = "/jm13/pduran/web/hs3/"
+outdir   = "/jm13/pduran/web/trop/"
 ;type     = "hs3-sondes" ;hs3-sondes, rawinsondes or allsondes
 type     = "rawinsondes" ;hs3-sondes, rawinsondes or allsondes
 oneplot  = 1  ;0=Plot all sondes on one plot, 1=Create different plots for each category
@@ -29,21 +29,26 @@ month     = systemfunc("awk '{print $3}' "+infile)
 day       = systemfunc("awk '{print $4}' "+infile)
 hour      = systemfunc("awk '{print $5}' "+infile)
 minute    = systemfunc("awk '{print $6}' "+infile)
-category  = systemfunc("awk '{print $7}' "+infile)
+stormtype = systemfunc("awk '{print $7}' "+infile)
 stormlat  = systemfunc("awk '{print $8}' "+infile)
 stormlon  = systemfunc("awk '{print $9}' "+infile)
-vmax      = systemfunc("awk '{print $10}' "+infile)
-pmin      = systemfunc("awk '{print $11}' "+infile)
-radius    = systemfunc("awk '{print $12}' "+infile)
-azimuth   = systemfunc("awk '{print $13}' "+infile)
+vmax      = toint(systemfunc("awk '{print $10}' "+infile))
+pmin      = toint(systemfunc("awk '{print $11}' "+infile))
+radius    = tofloat(systemfunc("awk '{print $12}' "+infile))
+azimuth   = tofloat(systemfunc("awk '{print $13}' "+infile))
+azirad    = azimuth*degtorad
 
-;------------------------------------;
-;Convert strings to appropriate types;
-;------------------------------------;
-vmax    := toint(vmax)
-radius  := tofloat(radius)
-azimuth := tofloat(azimuth)
-azirad   = azimuth*degtorad
+;------------------------;
+;Determine storm category;
+;------------------------;
+category = new(dimsizes(dropfiles),"string")
+printVarSummary( category)
+tdinds = ind(vmax.le.33.and.stormtype.eq.0)
+tsinds = ind(vmax.ge.34.and.vmax.lt.64.and.stormtype.eq.0)
+huinds = ind(vmax.ge.64.and.stormtype.eq.0)
+category(tdinds) = "TD"
+category(tsinds) = "TS"
+category(huinds) = "HU"
 
 ;---------------------------------------------------;
 ;Compute x and y coordinates from radius and azimuth;
