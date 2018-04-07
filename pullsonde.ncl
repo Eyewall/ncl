@@ -15,6 +15,7 @@ dz       = 100   ;Vertical spacing of sounding data
 listfile = "/nfs/jm13/pduran/hurricanesondes/rawinsondes_0-"+maxrad+"km"
 ;listfile = "/nfs/jm13/pduran/hurricanesondes/test"
 outfile  = "/nfs/jm13/pduran/rawinsondes/sparc/rawinsondes_0-"+maxrad+"km.nc"
+gridsatdir = "/nfs/molinarilab_rit/pduran/gridsat/all/"
 
 ;-----------------------------;
 ;Get information from listfile;
@@ -87,7 +88,7 @@ do i=0,ndropfiles-1
       end if
    end if
 end do
-print( maxhght)
+
 ;Get droptime in Julian format
 dattim_split = str_split_csv(dattim,"/",0)
 date = dattim_split(:,0)
@@ -105,6 +106,46 @@ dropyear = where(toint(dropyear).lt.60,"20"+dropyear,"19"+dropyear)
 droptime = cd_inv_calendar(stringtoint(dropyear),stringtoint(dropmon),stringtoint(dropday),stringtoint(drophour),\
                            stringtoint(dropminu),stringtoint(dropsec),"seconds since 1800-1-1 00:00:00",0)
 
+;Get IR brightness temperatures from GRIDSAT
+print( "Getting Gridsat times... "+systemfunc("date"))
+satfilenames = systemfunc("ls "+gridsatdir)
+satfilenamesplit = str_split_csv(satfilenames,".",3)
+satyear = toint(satfilenamesplit(:,1))
+satmon  = toint(satfilenamesplit(:,2))
+satday  = toint(satfilenamesplit(:,3))
+sathour = toint(satfilenamesplit(:,4))
+satminu = sathour
+satsec  = sathour
+satminu = 0
+satsec  = 0
+sattime = cd_inv_calendar(satyear,satmon,satday,sathour,satminu,satsec,"seconds since 1800-1-1 00:00:00",0)
+;Loop through each dropsonde and get the
+;corresponding Gridsat IR brightness temperature
+irbt = new(dimsizes(droptime),"float")
+do i=0,ndropfiles-1
+   unixi = i + 1
+   print( "Getting Gridsat IR brightness temperature for dropfile "+unixi+" of "+ndropfiles+" "+systemfunc("date"))
+   ;Get satellite time closest to sonde time
+   diffs = abs(sattime-droptime(i))
+   satind = minind(diffs)
+   satfilename = satfilenames(satind)
+   ;Read variabiles from satfile
+   satfile = addfile(gridsatdir+satfilename,"r")
+   ir  := satfile->irwin_cdr
+   lat := satfile->lat
+   lon := satfile->lon
+   ;Get closest IR point to sonde location
+   lats := onedtond(lat,(/dimsizes(lat),dimsizes(lon)/)) 
+   lons := onedtond(lon,(/dimsizes(lat),dimsizes(lon)/)) 
+   distances := gc_latlon(droplat(i),droplon(i),lats,lons,2,4)
+   latsoned  := ndtooned(lats)
+   lonsoned  := ndtooned(lons)
+   mindistind:= minind(ndtooned(distances))
+   satlat := latsoned(mindistind)
+   satlon := lonsoned(mindistind)
+   irbt(i)= ir(0,{satlat},{satlon})*ir@scale_factor+ir@add_offset-273.15
+   print( irbt(i))
+end do
 ;Assign coordinate variables to arrays
 droptime!0 = "dropfiles"
 copy_VarCoords(droptime,droplat)
@@ -119,6 +160,7 @@ copy_VarCoords(droptime,pmin)
 copy_VarCoords(droptime,cpt)
 copy_VarCoords(droptime,cpz)
 copy_VarCoords(droptime,maxhght)
+copy_VarCoords(droptime,irbt)
 p!0 = "dropfiles"
 p!1 = "height"
 p&height    = z
@@ -158,10 +200,11 @@ cpt@units = "degrees Celsius"
 cpt@_FillValue = -9999
 cpz@long_name = "height of coldest temperature in sounding"
 cpz@units = "m"
-maxhght@_FillValue = -9999
 maxhght@long_name = "height of highest temperature observation"
 maxhght@units = "m"
 maxhght@_FillValue = -9999
+irbt@long_name = "Gridsat NOAA FCDR of Brightness Temperature near 11 microns"
+irbt@units = "degrees Celsius"
 p@long_name = "pressure"
 p@units = "hPa"
 p@_FillValue = -9999
@@ -226,6 +269,7 @@ filevardef(fout,"height",typeof(z),getvardims(p&height))
 filevardef(fout,"cpt",typeof(cpt),getvardims(cpt))
 filevardef(fout,"cpz",typeof(cpz),getvardims(cpz))
 filevardef(fout,"maxhght",typeof(maxhght),getvardims(maxhght))
+filevardef(fout,"irbt",typeof(irbt),getvardims(irbt))
 filevardef(fout,"p",typeof(p),getvardims(p))
 filevardef(fout,"t",typeof(t),getvardims(t))
 filevardef(fout,"td",typeof(td),getvardims(td))
@@ -251,6 +295,7 @@ filevarattdef(fout,"height",z)
 filevarattdef(fout,"cpt",cpt)
 filevarattdef(fout,"cpz",cpz)
 filevarattdef(fout,"maxhght",maxhght)
+filevarattdef(fout,"irbt",irbt)
 filevarattdef(fout,"p",p)
 filevarattdef(fout,"t",t)
 filevarattdef(fout,"td",td)
@@ -284,6 +329,7 @@ fout->stormname= (/stormname/)
 fout->cpt      = (/cpt/)
 fout->cpz      = (/cpz/)
 fout->maxhght  = (/maxhght/)
+fout->irbt     = (/irbt/)
 fout->p        = (/p/)
 fout->t        = (/t/)
 fout->td       = (/td/)
