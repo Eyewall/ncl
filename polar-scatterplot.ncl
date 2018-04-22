@@ -42,7 +42,6 @@ azirad    = azimuth*degtorad
 ;Determine storm category;
 ;------------------------;
 category = new(dimsizes(dropfiles),"string")
-printVarSummary( category)
 tdinds = ind(vmax.le.33.and.stormtype.eq.0)
 tsinds = ind(vmax.ge.34.and.vmax.lt.64.and.stormtype.eq.0)
 huinds = ind(vmax.ge.64.and.stormtype.eq.0)

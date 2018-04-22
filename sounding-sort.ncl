@@ -34,9 +34,9 @@
 bttype = 1  ;0=HURDAT ascii file; 1=IBTrACS netcdf file
 hurdatfile = "/nfs/jm13/pduran/best-tracks/ATL+EPAC-1851-2016.txt"
 ibtracsfile= "/nfs/jm13/pduran/best-tracks/Allstorms.ibtracs_all.v03r10.nc"
-type       = "edit"  ;"eol" or "edit"
-;dropdir    = "/nfs/jm13/pduran/dropsondes/hs3/eol/allsondes/"
-dropdir    = "/nfs/jm13/pduran/rawinsondes/sparc/allsondes/"
+type       = "eol"  ;"eol" or "edit"
+dropdir    = "/nfs/jm13/pduran/dropsondes/hs3/eol/allsondes/"
+;dropdir    = "/nfs/jm13/pduran/rawinsondes/sparc/allsondes/"
 ;dropdir    = "/nfs/jm13/pduran/rawinsondes/sparc/test2/"
 minrad     = 0     ;Minimum radius within which to search (km)
 maxrad     = 1000  ;Maximum radius within which to search (km)
