@@ -38,7 +38,7 @@ julian_drop = greg2jul(dropyear,dropmon,dropday,drophour) + dropminu/1440
 satdate = yyyyddd_to_yyyymmdd(stringtoint(satyr+satdy))
 asciiwrite("satdate.tmp",satdate)
 satyear = stringtoint(satyr)
-satmon = stringtoint(systemfunc("cat satdate.tmp | cut -c 6-6"))
+satmon = stringtoint(systemfunc("cat satdate.tmp | cut -c 5-6"))
 satday = stringtoint(systemfunc("cat satdate.tmp | cut -c 7-8"))
 julian_sat = greg2jul(satyear,satmon,satday,sathour) + satminu/1440
 
@@ -55,7 +55,7 @@ trackminP = trackarray(:,5)  ;Minimum sea level pressure
 
 ;Loop through all drops, find the closest time for each, and plot IR image
 ndrops = dimsizes(dropfiles)
-do i=86,ndrops-1
+do i=0,ndrops-1
    unixi = i + 1
    system("echo Processing file "+unixi+" of "+ndrops+"    `date`")
 
@@ -167,12 +167,12 @@ do i=86,ndrops-1
       ;---------------------;
       ;Define domain of plot;
       ;---------------------;
-      minlat = droplat - 10. 
-      maxlat = droplat + 10.
-      minlon = droplon - 10. 
-      maxlon = droplon + 10.
+      minlat = droplat - 5. 
+      maxlat = droplat + 5.
+      minlon = droplon - 5. 
+      maxlon = droplon + 5.
     
-      filename = dropyear_str(i)+dropmon_str(i)+dropday_str(i)+"_"+drophour_str(i)+dropminu_str(i)+"_ir"
+      filename = satyear+satmon+satday+sathour+satminu+"_ir"
       wks = gsn_open_wks("PNG",filename)
     
       ;Set workspace maximum size
@@ -185,7 +185,7 @@ do i=86,ndrops-1
       res@gsnAddCyclic = False
       res@sfXArray = longitude
       res@sfYArray = latitude
-      res@gsnLeftString = imgyear+imgmon+imgday+"_"+imgtime+" UTC"
+      res@gsnLeftString = satmon+"/"+satday+"/"+satyear+" "+sathour+satminu+" UTC"
       res@gsnRightString = "Brightness Temperature (~S~o~N~C)"
       res@gsnStringFontHeightF = 0.015
       res@gsnLeftStringOrthogonalPosF = -.0005
@@ -195,8 +195,8 @@ do i=86,ndrops-1
       res@cnFillMode = "RasterFill"   ;Raster mode
       res@cnLinesOn = False           ;Turn off contours
       res@cnLevelSelectionMode = "ManualLevels"
-      res@cnMinLevelValF = -80.
-      res@cnMaxLevelValF = 50.
+      res@cnMinLevelValF = -90.
+      res@cnMaxLevelValF = 38.
       res@cnLevelSpacingF = 2.
    
       res@gsnSpreadColors = True
@@ -223,7 +223,7 @@ do i=86,ndrops-1
    
       res@cnLineLabelsOn = False	;Turn off contour labels
       res@tmXTOn = False
-      res@tmYROn = True
+      res@tmYROn = False
       res@tmXBLabelFontHeightF = 0.013
       res@tmYLLabelFontHeightF = 0.013
    
@@ -233,19 +233,15 @@ do i=86,ndrops-1
    
       ;Get AVN satellite colormap, change foreground and background colors to
       ;white and black, respectively, and reverse it for plotting.
-      gsn_define_colormap(wks,"avn")
-      colors = gsn_retrieve_colormap(wks)
-      colors(0,:) = 0
-      colors(1,:) = 1
-      gsn_define_colormap(wks,colors)
+      gsn_define_colormap(wks,"avn_extended")
       gsn_reverse_colormap(wks)
    
       ;Plot the image
       polyres               = True
-      polyres@gsMarkerIndex = 5	;Polymarker style
-      polyres@gsMarkerSizeF = 20.	;Polymarker size
-      polyres@gsMarkerColor   = "magenta"
-      polyres@gsMarkerThicknessF = 5.
+      polyres@gsMarkerIndex = 0	;Polymarker style
+      polyres@gsMarkerSizeF = 30.	;Polymarker size
+      polyres@gsMarkerColor   = "black"
+      polyres@gsMarkerThicknessF = 10.
       plot = gsn_csm_contour_map(wks,TbC(:,:),res)
       dum1 = gsn_add_polymarker(wks,plot,droplon,droplat,polyres)
       draw(plot)

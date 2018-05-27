@@ -42,6 +42,7 @@ thetav   = new((/nfiles,nlevels/),"float")
 n2       = new((/nfiles,nlevels/),"float")
 tempc    = new((/nfiles,nlevels/),"float")
 merid_v  = new((/nfiles,nlevels/),"float")
+tot_v    = new((/nfiles,nlevels/),"float")
 lats     = new((/nfiles,nlevels/),"float")
 lons     = new((/nfiles,nlevels/),"float")
 plotdata = new((/nlevels,nfiles/),"float")
@@ -106,6 +107,7 @@ do i=0,nfiles-1
    thetae  (i,0:nhghts-1) = theta(i,0:nhghts-1)+(2510400/1004)*w(i,0:nhghts-1)
    tempc   (i,0:nhghts-1) = tc
    merid_v (i,0:nhghts-1) = v
+   tot_v   (i,0:nhghts-1) = v
    cp_temp (i) = min(tc)
    cp_hght (i) = hght(minind(tc))/1000
    cp_theta(i) = (cp_temp(i)+273.15)*(1000/p(minind(tc)))^0.286
@@ -182,7 +184,8 @@ copy_VarMeta(plotthetae,plottempc)
 
 ;WIND SPEED
 plotmerid_v = transpose(merid_v)
-copy_VarMeta(plotthetae,plotmerid_v)
+plottot_v = transpose(tot_v)
+copy_VarMeta(plotthetae,plottot_v)
 
 ;STATIC STABILITY
 plotn2 = transpose(n2)*10000  ;Convert to more readable units (10^-4 s^-2)
@@ -204,6 +207,7 @@ if(interp.eq.1)then
    plottheta   = linmsg(plottheta,0)
    plottempc   = linmsg(plottempc,0)
    plotmerid_v = linmsg(plotmerid_v,0)
+   plottot_v = linmsg(plottot_v,0)
    plotn2      = linmsg(plotn2,0)
    trop_z      = linmsg(trop_z,0)
    cp_temp = linmsg(cp_temp,0)
@@ -286,15 +290,15 @@ trophghts = gsn_add_polyline(wks,tempc_img,dropdist,trop_z,tropres)
 draw(tempc_img)
 frame(wks)
 
-;MERIDIONAL VELOCITY
+;TOTAL VELOCITY
 wks = gsn_open_wks("png",outfile+"_v"+out_suffix)
 gsn_define_colormap(wks,"BlWhRe")
 res@cnLevelSelectionMode = "ManualLevels"
 res@cnMinLevelValF = -60
 res@cnMaxLevelValF = 60
-;res@tiMainString = "Meridional velocity (m/s)   "+flight+"  "+transect
-merid_v_img = gsn_csm_contour(wks,plotmerid_v,res)
-draw(merid_v_img)
+res@tiMainString = "Wind speed (m s~S~-1~N~)   "+flight+"  "+transect
+tot_v_img = gsn_csm_contour(wks,plottot_v,res)
+draw(tot_v_img)
 frame(wks)
 
 ;STATIC STABILITY

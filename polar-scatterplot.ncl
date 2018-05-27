@@ -11,11 +11,11 @@
 indir    = "/nfs/jm13/pduran/hurricanesondes/"
 outdir   = "/jm13/pduran/web/trop/"
 ;type     = "hs3-sondes" ;hs3-sondes, rawinsondes or allsondes
-type     = "rawinsondes" ;hs3-sondes, rawinsondes or allsondes
-oneplot  = 1  ;0=Plot all sondes on one plot, 1=Create different plots for each category
+type     = "hs3-sondes" ;hs3-sondes, rawinsondes or allsondes
+oneplot  = 0  ;0=Plot all sondes on one plot, 1=Create different plots for each category
 catlist  = (/"TD","TS","HU"/)   ;Category list. Used only if oneplot=1
 minrad   = 0      ;Minimum plotting radius
-maxrad   = 1000   ;Maximum plotting radius
+maxrad   = 500   ;Maximum plotting radius
 spacing  = 100    ;Spacing of range rings
 degtorad = 2*3.141592/360
 
@@ -48,6 +48,7 @@ huinds = ind(vmax.ge.64.and.stormtype.eq.0)
 category(tdinds) = "TD"
 category(tsinds) = "TS"
 category(huinds) = "HU"
+print( tdinds)
 
 ;---------------------------------------------------;
 ;Compute x and y coordinates from radius and azimuth;

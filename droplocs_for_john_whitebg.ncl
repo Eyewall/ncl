@@ -29,12 +29,12 @@ begin
 end
 
 ;Set the dropsonde satcenter track files and McIdas area file path
-dropdir   = "/nfs/jm13/pduran/dropsondes/hs3/edit/onedir/"
+dropdir   = "/nfs/jm13/pduran/dropsondes/hs3/forskewt/"
 trakfile  = "/jm13/pduran/hs3/ascii/hs3_stormtracks"
 satpath   = "/jm13/pduran/sat/"
-outputdir = "/jm13/pduran/web/"
+outdir    = "/jm13/pduran/web/"
 tablefile = "/jm13/pduran/sat/tables/coeff.txt"
-listfile  = "/nfs/jm13/pduran/dropsondes/hs3/edit/2012/nadine2/transect_abstract"
+listfile  = "/nfs/jm13/pduran/dropsondes/hs3/forskewt/nadine1"
 
 ;Read the satellite coefficient table file
 table = readAsciiTable(tablefile,8,"float",(/2,13/))
@@ -46,7 +46,7 @@ satfiles   = new(2,"string")
 ;dropfiles(1) = dropdir+"A79-151022-1946-WB57_TCI-100m-noEC-mfx500-sm0x-loc.edit"
 satfiles(0)  = satpath+"goes13.2012.258.224519.BAND_04.nc"
 satfiles(1)  = satpath+"goes13.2012.258.231521.BAND_04.nc" 
-;satfiles(1) = "/jm13/pduran/sat/goes15.2015.296.183019.BAND_04.nc"
+;satfiles(1)  = satpath+"goes13.2012.259.001519.BAND_04.nc" 
 dropfiles = dropdir+systemfunc("cat "+listfile)
 print(dropfiles)
 
@@ -66,7 +66,7 @@ locfiles = dropdir+systemfunc("cat "+listfile)
 droplats = new(dimsizes(locfiles),"float")
 droplons = new(dimsizes(locfiles),"float")
 do i=0,dimsizes(locfiles)-1
-  droplats(i) = stringtofloat(systemfunc("sed -n 5p "+locfiles(i)+" | awk '{print $3}'")) 
+  droplats(i) = stringtofloat(systemfunc("sed -n 5p "+locfiles(i)+" | awk '{print $9}'")) 
   droplons(i) = stringtofloat(systemfunc("sed -n 5p "+locfiles(i)+" | awk '{print $6}'")) 
 ;  droplons(i) = stringtofloat(systemfunc("sed -n 5p "+locfiles(i)+" | awk '{print $5}' | colrm 1 1")) 
 end do
@@ -107,8 +107,13 @@ do i=1,ndrops-1
    satmon = systemfunc("echo "+satdate+" | cut -c 1")
    satday := systemfunc("echo "+satdate+" | colrm 1 1")
    satdate := satmon+"/"+satday+"/"+satyear
-   sathr  = systemfunc("echo "+sattime+" | cut -c 1-2")
-   satmin = systemfunc("echo "+sattime+" | cut -c 3-4")
+   if(sattime.gt.9999)then
+      sathr  = systemfunc("echo "+sattime+" | cut -c 1-2")
+      satmin = systemfunc("echo "+sattime+" | cut -c 3-4")
+   else
+      sathr  = "00"
+      satmin = systemfunc("echo "+sattime+" | cut -c 1-2")
+   end if
    sattime := sathr+":"+satmin+" UTC"
 
    ;Get date and time of drop
@@ -192,7 +197,7 @@ do i=1,ndrops-1
    minlon = -52 - 8.5
    maxlon = -52 + 8.5
  
-   filename = dropyear+dropmon+dropday+"_"+drophour+dropmin+"_ir"
+   filename = outdir+satyear+satmon+satday+"_"+sathr+satmin+"_ir"
    wks = gsn_open_wks("PNG",filename+"_red")
  
    ;Set workspace maximum size
@@ -205,18 +210,23 @@ do i=1,ndrops-1
    res@gsnAddCyclic = False
    res@sfXArray = longitude
    res@sfYArray = latitude
-   res@gsnLeftString = satdate+"  "+drophour+":"+dropmin+" UTC"
+   if(satdate.eq."9/14/2012")then
+      prefix = "a) "
+   else
+      prefix = "c) "
+   end if
+   res@gsnLeftString = prefix+satdate+"  "+sathr+satmin+" UTC"
    res@gsnRightString = "Brightness Temperature (~S~o~N~C)"
-   res@gsnStringFontHeightF = 0.015
-   res@gsnLeftStringOrthogonalPosF = .01
-   res@gsnRightStringOrthogonalPosF = .01
+   res@gsnStringFontHeightF = 0.02
+   res@gsnLeftStringOrthogonalPosF = .02
+   res@gsnRightStringOrthogonalPosF = .02
  
    res@cnFillOn = True             ;Color fill
    res@cnFillMode = "RasterFill"   ;Raster mode
    res@cnLinesOn = False           ;Turn off contours
    res@cnLevelSelectionMode = "ManualLevels"
-   res@cnMinLevelValF = -80.
-   res@cnMaxLevelValF = 50.
+   res@cnMinLevelValF = -90.
+   res@cnMaxLevelValF = 38.
    res@cnLevelSpacingF = 2.
 
    res@gsnSpreadColors = True
@@ -235,8 +245,8 @@ do i=1,ndrops-1
    res@lbLabelStride = 5.
    res@lbTitleOn = False
    res@lbTitleString = "~S~o~N~C" ;Deg C
-   res@lbTitleFontHeightF = 0.013
-   res@lbLabelFontHeightF = 0.013
+   res@lbTitleFontHeightF = 0.02
+   res@lbLabelFontHeightF = 0.02
    res@lbOrientation = "Vertical"
    res@lbBoxMinorExtentF = 0.1
    res@pmLabelBarOrthogonalPosF = 0.005
@@ -244,18 +254,19 @@ do i=1,ndrops-1
    res@cnLineLabelsOn = False	;Turn off contour labels
    res@tmXTOn = False
    res@tmYROn = True
-   res@tmXBLabelFontHeightF = 0.013
-   res@tmYLLabelFontHeightF = 0.013
+   res@tmXBLabelFontHeightF = 0.02
+   res@tmYLLabelFontHeightF = 0.02
 
    res@gsnMaximize = True 
    res@gsnDraw  = False		;So we can add poly stuff
    res@gsnFrame = False
    plot = gsn_csm_contour_map(wks,TbC(:,:),res)
+   print( "Writing image to "+filename+"_red.png")
 end do
 
    ;Get AVN satellite colormap, change foreground and background colors to
    ;white and black, respectively, and reverse it for plotting.
-   gsn_define_colormap(wks,"avn_whitebg")
+   gsn_define_colormap(wks,"avn_extended")
    gsn_reverse_colormap(wks)
 
    markercolors = new(dimsizes(droplats),"string")
@@ -263,25 +274,27 @@ end do
    markercolors(0) = "magenta"
    markercolors(2) = "red"
 
-   dum = new(dimsizes(droplats),"graphic")
-   do j=0,dimsizes(droplats)-1
-      ;Overlay dropsonde location markers
-      polyres               = True
-      polyres@gsMarkerIndex = 3	;Polymarker style
-      polyres@gsMarkerSizeF = 30.	;Polymarker size
-      polyres@gsMarkerColor   = markercolors(j)
-      polyres@gsMarkerThicknessF = 10.
-      add_markers(wks,plot,droplons(j),droplats(j),markercolors(j),polyres@gsMarkerIndex,polyres@gsMarkerSizeF)
-   end do
+;   dum = new(dimsizes(droplats),"graphic")
+;   do j=0,dimsizes(droplats)-1
+;      ;Overlay dropsonde location markers
+;      polyres               = True
+;      polyres@gsMarkerIndex = 3	;Polymarker style
+;      polyres@gsMarkerSizeF = 30.	;Polymarker size
+;      polyres@gsMarkerColor = markercolors(j)
+;      polyres@gsMarkerThicknessF = 10.
+;      add_markers(wks,plot,droplons(j),droplats(j),markercolors(j),polyres@gsMarkerIndex,polyres@gsMarkerSizeF)
+;   end do
 
-;   text = tostring(ispan(1,dimsizes(droplats),1))
-;   txres = True
-;   txres@txFont = 30
-;   txres@txFontHeightF = 0.025
-;   txres@txFontColor = "black"
-;   dum = gsn_add_text(wks,plot,text,droplons,droplats,txres)
+   text = tostring(ispan(1,dimsizes(droplats),1))
+   print( text)
+   print( droplats)
+   print( droplons)
+   txres = True
+   txres@txFont = 30
+   txres@txFontHeightF = 0.025
+   txres@txFontColor = "black"
+   dum = gsn_add_text(wks,plot,text,droplons,droplats,txres)
    draw(plot)
    frame(wks)
    delete([/ir,latitude,longitude,r,arg_before,arg,Teff,Tb,TbC,res/])
-   system("mv "+filename+".png "+outputdir)
 ;   delete([/dropdata,lats,lons/])
